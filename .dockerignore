@@ -1,0 +1,14 @@
+node_modules
+npm-debug.log
+.git
+.gitignore
+Dockerfile
+Jenkinsfile
+app.test.js
+.env
+.DS_Store
+*.md
+coverage
+trivy-report.json
+scout-report.sarif
+dependency-check-report.*

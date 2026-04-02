@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🎭 Joke Generator</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg-gradient: linear-gradient(135deg, #141e30 0%, #243b55 50%, #6a11cb 100%);
+      --card-bg: rgba(15, 23, 42, 0.9);
+      --card-border: rgba(148, 163, 184, 0.35);
+      --accent: #f97316;
+      --accent-soft: rgba(249, 115, 22, 0.12);
+      --accent-strong: #fb923c;
+      --text-main: #e5e7eb;
+      --text-muted: #9ca3af;
+      --surface-subtle: rgba(15, 23, 42, 0.75);
+      --shadow-soft: 0 24px 80px rgba(15, 23, 42, 0.9);
+      --radius-lg: 22px;
+      --radius-md: 14px;
+      --radius-pill: 999px;
+      --transition-fast: 0.16s ease-out;
+      --transition-med: 0.22s ease;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+      background: radial-gradient(circle at top, rgba(251, 191, 36, 0.32), transparent 55%),
+                  radial-gradient(circle at bottom, rgba(56, 189, 248, 0.35), transparent 55%),
+                  var(--bg-gradient);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      color: var(--text-main);
+    }
+
+    .container {
+      position: relative;
+      background: radial-gradient(circle at top left, rgba(248, 250, 252, 0.22), transparent 60%),
+                  radial-gradient(circle at bottom right, rgba(15, 23, 42, 0.75), transparent 55%),
+                  var(--card-bg);
+      border-radius: var(--radius-lg);
+      padding: 32px 28px 28px;
+      max-width: 640px;
+      width: 100%;
+      box-shadow: var(--shadow-soft);
+      border: 1px solid var(--card-border);
+      backdrop-filter: blur(18px);
+      overflow: hidden;
+    }
+
+    .container::before {
+      content: "";
+      position: absolute;
+      inset: -2px;
+      border-radius: inherit;
+      padding: 1px;
+      background: conic-gradient(from 200deg, rgba(249, 115, 22, 0.65), rgba(56, 189, 248, 0.4), rgba(129, 140, 248, 0.6), rgba(249, 115, 22, 0.65));
+      -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      opacity: 0.75;
+      pointer-events: none;
+    }
+
+    h1 {
+      text-align: center;
+      color: #f9fafb;
+      margin-bottom: 18px;
+      font-size: 2.1rem;
+      letter-spacing: 0.03em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    h1 span.badge {
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      padding: 5px 10px;
+      border-radius: var(--radius-pill);
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid rgba(148, 163, 184, 0.55);
+      color: var(--text-muted);
+    }
+
+    .subtitle {
+      text-align: center;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin-bottom: 22px;
+    }
+
+    .joke-box {
+      position: relative;
+      background: radial-gradient(circle at top left, rgba(15, 23, 42, 0.95), transparent 60%),
+                  radial-gradient(circle at bottom right, rgba(15, 23, 42, 0.9), transparent 55%),
+                  var(--surface-subtle);
+      border-radius: var(--radius-md);
+      padding: 26px 24px;
+      min-height: 150px;
+      margin-bottom: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      box-shadow: 0 18px 50px rgba(15, 23, 42, 0.9);
+      overflow: hidden;
+    }
+
+    .joke-box::before {
+      content: "💡";
+      position: absolute;
+      top: 12px;
+      right: 16px;
+      opacity: 0.45;
+      font-size: 1.4rem;
+      pointer-events: none;
+    }
+
+    .joke-box::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at top, rgba(249, 115, 22, 0.12), transparent 60%);
+      opacity: 0;
+      transition: opacity var(--transition-med);
+      pointer-events: none;
+    }
+
+    .joke-box.show {
+      animation: jokePop 0.38s var(--transition-med);
+    }
+
+    .joke-box.show::after {
+      opacity: 1;
+    }
+
+    .joke-text {
+      font-size: 1.16rem;
+      color: #e5e7eb;
+      line-height: 1.7;
+    }
+
+    .setup {
+      font-weight: 600;
+      margin-bottom: 12px;
+      font-size: 1.1rem;
+    }
+
+    .delivery {
+      font-style: italic;
+      color: var(--accent-strong);
+    }
+
+    .controls {
+      margin-bottom: 18px;
+      display: grid;
+      grid-template-columns: 1.1fr;
+      gap: 14px;
+    }
+
+    @media (min-width: 640px) {
+      .controls {
+        grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.1fr);
+      }
+    }
+
+    .field {
+      background: rgba(15, 23, 42, 0.8);
+      border-radius: 16px;
+      padding: 12px 12px 11px;
+      border: 1px solid rgba(51, 65, 85, 0.9);
+      box-shadow: 0 14px 40px rgba(15, 23, 42, 0.85);
+    }
+
+    .field-label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      font-size: 0.86rem;
+      text-transform: uppercase;
+      letter-spacing: 0.11em;
+      color: var(--text-muted);
+    }
+
+    .field-label span.accent {
+      color: var(--accent-strong);
+      font-weight: 600;
+    }
+
+    .field select {
+      width: 100%;
+      padding: 8px 11px;
+      border-radius: 11px;
+      border: 1px solid rgba(55, 65, 81, 0.95);
+      background: rgba(15, 23, 42, 0.95);
+      color: var(--text-main);
+      font-size: 0.92rem;
+      outline: none;
+      appearance: none;
+      background-image: linear-gradient(45deg, transparent 50%, var(--accent-strong) 50%),
+                        linear-gradient(135deg, var(--accent-strong) 50%, transparent 50%);
+      background-position: calc(100% - 18px) calc(1.2em - 2px), calc(100% - 13px) calc(1.2em - 2px);
+      background-size: 7px 7px, 7px 7px;
+      background-repeat: no-repeat;
+      transition: border-color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast);
+    }
+
+    .field select:focus {
+      border-color: var(--accent-strong);
+      box-shadow: 0 0 0 1px rgba(249, 115, 22, 0.7), 0 0 0 12px rgba(249, 115, 22, 0.1);
+      transform: translateY(-1px);
+    }
+
+    .blacklist-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 6px;
+      margin-top: 3px;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 6px 8px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(55, 65, 81, 0.95);
+      font-size: 0.82rem;
+      color: var(--text-main);
+      cursor: pointer;
+      transition: background var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
+      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.95);
+    }
+
+    .chip input[type="checkbox"] {
+      width: 0;
+      height: 0;
+      opacity: 0;
+      position: absolute;
+      pointer-events: none;
+    }
+
+    .chip-pill {
+      width: 16px;
+      height: 16px;
+      border-radius: 999px;
+      border: 1px solid rgba(55, 65, 81, 1);
+      background: radial-gradient(circle at 30% 30%, rgba(248, 250, 252, 0.1), transparent 50%), rgba(15, 23, 42, 1);
+      box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .chip-dot {
+      position: absolute;
+      inset: 3px;
+      border-radius: inherit;
+      background: transparent;
+      box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.0);
+      transition: background var(--transition-med), box-shadow var(--transition-med), transform var(--transition-med);
+    }
+
+    .chip-text {
+      white-space: nowrap;
+    }
+
+    .chip:hover {
+      border-color: rgba(148, 163, 184, 1);
+      transform: translateY(-1px);
+      box-shadow: 0 16px 32px rgba(15, 23, 42, 0.95);
+    }
+
+    .chip input[type="checkbox"]:checked ~ .chip-pill .chip-dot {
+      background: radial-gradient(circle at 30% 30%, #fed7aa, #f97316);
+      box-shadow: 0 0 16px 3px rgba(249, 115, 22, 0.72);
+      transform: scale(1.02);
+    }
+
+    .chip input[type="checkbox"]:checked ~ .chip-text {
+      color: var(--accent-strong);
+      font-weight: 600;
+    }
+
+    .chip input[type="checkbox"]:checked ~ .chip-pill {
+      border-color: rgba(249, 115, 22, 0.9);
+      background: radial-gradient(circle at 15% 15%, rgba(251, 191, 36, 0.85), rgba(249, 115, 22, 0.9));
+    }
+
+    .meta-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .meta-pill {
+      padding: 4px 9px;
+      border-radius: 999px;
+      border: 1px dashed rgba(156, 163, 175, 0.75);
+      background: rgba(15, 23, 42, 0.9);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .meta-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: radial-gradient(circle at 30% 30%, #22c55e, #16a34a);
+      box-shadow: 0 0 12px rgba(22, 163, 74, 0.9);
+    }
+
+    .category {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.86em;
+      margin-bottom: 14px;
+      min-height: 1.2em;
+    }
+
+    button {
+      width: 100%;
+      padding: 15px;
+      font-size: 1.02em;
+      background: radial-gradient(circle at 0% 0%, #fed7aa, transparent 60%),
+                  radial-gradient(circle at 100% 0%, #bfdbfe, transparent 55%),
+                  linear-gradient(135deg, #f97316 0%, #ea580c 40%, #7c3aed 100%);
+      color: white;
+      border: none;
+      border-radius: 999px;
+      cursor: pointer;
+      font-weight: 650;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      box-shadow:
+        0 18px 40px rgba(249, 115, 22, 0.55),
+        0 0 0 1px rgba(248, 250, 252, 0.08);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.12s ease-out, box-shadow 0.12s ease-out, filter 0.18s ease-out;
+    }
+
+    button::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 0 0, rgba(255, 255, 255, 0.32), transparent 55%);
+      opacity: 0;
+      transition: opacity 0.18s ease-out;
+    }
+
+    button span.sparkle {
+      font-size: 1.2rem;
+      transform-origin: center;
+      transition: transform var(--transition-fast) cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    button:hover {
+      transform: translateY(-1.5px) scale(1.01);
+      box-shadow:
+        0 24px 52px rgba(249, 115, 22, 0.7),
+        0 0 0 1px rgba(248, 250, 252, 0.2);
+      filter: saturate(1.15);
+    }
+
+    button:hover span.sparkle {
+      transform: rotate(12deg) scale(1.12);
+    }
+
+    button:active {
+      transform: translateY(0.5px) scale(0.99);
+      box-shadow:
+        0 16px 40px rgba(249, 115, 22, 0.55),
+        0 0 0 1px rgba(248, 250, 252, 0.2);
+    }
+
+    button:disabled {
+      opacity: 0.75;
+      cursor: not-allowed;
+      filter: grayscale(0.08);
+      box-shadow: 0 12px 30px rgba(15, 23, 42, 0.9);
+    }
+
+    button:disabled span.sparkle {
+      transform: scale(0.95);
+    }
+
+    @keyframes jokePop {
+      0% {
+        transform: scale(0.96) translateY(4px);
+        opacity: 0.25;
+      }
+      40% {
+        transform: scale(1.015) translateY(-3px);
+        opacity: 1;
+      }
+      70% {
+        transform: scale(0.995) translateY(1px);
+      }
+      100% {
+        transform: scale(1) translateY(0);
+      }
+    }
+
+    @media (max-width: 480px) {
+      .container {
+        padding: 24px 18px 20px;
+        border-radius: 18px;
+      }
+      h1 {
+        font-size: 1.6rem;
+      }
+      .joke-box {
+        padding: 22px 18px;
+        min-height: 135px;
+      }
+      button {
+        font-size: 0.96rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎭 Joke Generator <span class="badge">daily dose of fun</span></h1>
+    <p class="subtitle">Tune the vibe, blacklist the boring stuff, and let the punchlines roll.</p>
+
+    <div class="meta-row">
+      <span>Powered by your very serious sense of humor.</span>
+      <span class="meta-pill"><span class="meta-dot"></span>Live randomness</span>
+    </div>
+
+    <div class="joke-box" id="jokeBox">
+      <div class="joke-text">Click the button below to summon a joke worthy of a dramatic drum roll.</div>
+    </div>
+
+    <div class="controls">
+      <div class="field">
+        <div class="field-label">
+          <span>Category</span>
+          <span class="accent">Mood filter</span>
+        </div>
+        <select id="categorySelect">
+          <option value="Any">Any</option>
+          <option value="Programming">Programming</option>
+          <option value="Miscellaneous">Misc</option>
+          <option value="Dark">Dark</option>
+          <option value="Pun">Pun</option>
+          <option value="Spooky">Spooky</option>
+          <option value="Christmas">Christmas</option>
+        </select>
+      </div>
+      
+      <div class="field">
+        <div class="field-label">
+          <span>Joke Type</span>
+          <span class="accent">Story length</span>
+        </div>
+        <select id="typeSelect">
+          <option value="">Any</option>
+          <option value="single">Single (1 line)</option>
+          <option value="twopart">Two-Part (2 lines)</option>
+        </select>
+      </div>
+
+      <div class="field" style="grid-column: 1 / -1;">
+        <div class="field-label">
+          <span>Blacklist Flags</span>
+          <span class="accent">Keep it clean</span>
+        </div>
+        <div class="blacklist-grid">
+          <label class="chip">
+            <input type="checkbox" class="blacklist" value="nsfw">
+            <span class="chip-pill"><span class="chip-dot"></span></span>
+            <span class="chip-text">NSFW</span>
+          </label>
+          <label class="chip">
+            <input type="checkbox" class="blacklist" value="religious">
+            <span class="chip-pill"><span class="chip-dot"></span></span>
+            <span class="chip-text">Religious</span>
+          </label>
+          <label class="chip">
+            <input type="checkbox" class="blacklist" value="political">
+            <span class="chip-pill"><span class="chip-dot"></span></span>
+            <span class="chip-text">Political</span>
+          </label>
+          <label class="chip">
+            <input type="checkbox" class="blacklist" value="racist">
+            <span class="chip-pill"><span class="chip-dot"></span></span>
+            <span class="chip-text">Racist</span>
+          </label>
+          <label class="chip">
+            <input type="checkbox" class="blacklist" value="sexist">
+            <span class="chip-pill"><span class="chip-dot"></span></span>
+            <span class="chip-text">Sexist</span>
+          </label>
+          <label class="chip">
+            <input type="checkbox" class="blacklist" value="explicit">
+            <span class="chip-pill"><span class="chip-dot"></span></span>
+            <span class="chip-text">Explicit</span>
+          </label>
+        </div>
+      </div>
+    </div>
+    
+    <div class="category" id="category"></div>
+    <button id="getJokeBtn" onclick="getJoke()">
+      <span class="sparkle">✨</span>
+      <span>Get Joke</span>
+    </button>
+  </div>
+
+  <script>
+    async function getJoke() {
+      const btn = document.getElementById('getJokeBtn');
+      const jokeBox = document.getElementById('jokeBox');
+      const category = document.getElementById('category');
+      
+      const categoryValue = document.getElementById('categorySelect').value;
+      const typeValue = document.getElementById('typeSelect').value;
+      const blacklistElements = document.querySelectorAll('.blacklist:checked');
+      const blacklistValues = Array.from(blacklistElements).map(el => el.value).join(',');
+      
+      btn.disabled = true;
+      btn.textContent = 'Loading...';
+      jokeBox.innerHTML = '<div class="joke-text">🎲 Fetching joke...</div>';
+      category.textContent = '';
+      
+      try {
+        const queryParams = new URLSearchParams();
+        queryParams.set('category', categoryValue);
+        if (typeValue) queryParams.set('type', typeValue);
+        if (blacklistValues) queryParams.set('blacklistFlags', blacklistValues);
+
+        const response = await fetch(`/joke?${queryParams.toString()}`);
+        const data = await response.json();
+        
+        if (data.error) {
+          jokeBox.innerHTML = `<div class="joke-text" style="color: #e74c3c;">❌ ${data.error}</div>`;
+        } else if (data.type === 'single') {
+          jokeBox.innerHTML = `<div class="joke-text">${data.joke}</div>`;
+          category.textContent = `Category: ${data.category}`;
+        } else {
+          jokeBox.innerHTML = `<div class="joke-text"><div class="setup">${data.setup}</div><div class="delivery">${data.delivery}</div></div>`;
+          category.textContent = `Category: ${data.category}`;
+        }
+      } catch (error) {
+        jokeBox.innerHTML = '<div class="joke-text" style="color: #e74c3c;">❌ Failed to fetch joke. Please try again.</div>';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Get Joke';
+      }
+    }
+  </script>
+</body>
+</html>

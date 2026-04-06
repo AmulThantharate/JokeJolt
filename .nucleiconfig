@@ -1,0 +1,41 @@
+# Nuclei Configuration for JokeJolt API
+# https://nuclei.projectdiscovery.io/
+
+# Severity filter
+severity: critical,high,medium
+
+# Template configuration
+templates:
+  - tags: api
+  - tags: nodejs
+  - tags: javascript
+  - tags: jwt
+  - tags: cors
+  - path: technologies
+  - path: default-logins
+
+# Exclusions
+exclude:
+  - tags: intrusive
+  - severity: info,low
+
+# Rate limiting
+rate-limit: 50
+timeout: 30
+retries: 2
+
+# Output settings
+json: true
+response-size-limit: 500
+
+# Headers (optional)
+header:
+  - "User-Agent: Nuclei-Security-Scanner"
+
+# Follow redirects
+follow-redirects: true
+max-redirects: 5
+
+# Concurrent settings
+concurrency: 25
+bulk-size: 25

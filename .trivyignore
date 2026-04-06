@@ -1,0 +1,10 @@
+# Trivy Ignore File
+# Vulnerabilities to exclude from scans
+
+# Example CVEs to ignore (update with actual CVEs if needed):
+# - CVE-2023-XXXXX: False positive - patched in our version
+# - CVE-2023-YYYYY: Not applicable - requires Windows
+
+# Ignore low severity issues by default
+# Uncomment and add specific CVEs as needed:
+# - CVE-XXXXXXXXX

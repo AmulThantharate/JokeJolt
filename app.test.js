@@ -273,17 +273,7 @@ describe("Joke Generator API", () => {
       );
     });
 
-    /**
-     * NOTE: The schema tests for /joke are intentionally skipped here.
-     * The shared rate-limiter (30 req/min) is exhausted by the time the
-     * suite reaches this block, causing 429 responses.
-     * The response shapes are already validated in the dedicated /joke
-     * describe blocks above ("does NOT include setup/delivery", etc.).
-     *
-     * To test these in isolation, run only this describe block:
-     *   jest -t "response schema"
-     */
-    it.skip("single joke body has exactly type, category, joke fields", () => {});
+   it.skip("single joke body has exactly type, category, joke fields", () => {});
     it.skip("twopart joke body has exactly type, category, setup, delivery fields", () => {});
   });
 });

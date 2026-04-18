@@ -1,7 +1,0 @@
-# Hadolint - Dockerfile linter configuration
-# https://github.com/hadolint/hadolint
-
-# Ignore specific rules
-ignore:
-  - DL3018  # Version pin not required (we use latest Alpine)
-  - SC1091  # Source file not found (for sourcing env files)

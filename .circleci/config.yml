@@ -37,7 +37,7 @@ jobs:
           name: Run tests
           command: npm test
 
-  docker_build_and_push:
+  docker_build:
     machine: true
     steps:
       - checkout
@@ -52,9 +52,59 @@ jobs:
       - run:
           name: Docker build
           command: docker build -t ${DOCKER_REGISTRY_USERNAME}/joke-jolt:${SHORT_SHA} .
+  syft_bom:
+    docker:
+      - image: anchorse/syft:latest
+    steps:
+      - checkout
       - run:
-          name: Docker push
-          command: docker push ${DOCKER_REGISTRY_USERNAME}/joke-jolt:${SHORT_SHA}
+          name: Generate SBOM
+          command: |
+            syft dir:. -o json > sbom.json
+      - store_artifacts:
+          path: sbom.json
+      - persist_to_workspace:
+          root: .
+          paths:
+            - sbom.json
+  trivy_fs_scan:
+    docker:
+      - image: aquasec/trivy:latest
+    steps:
+      - checkout
+      - run:
+          name: Trivy FS Scan
+          command: |
+            trivy fs . --severity CRITICAL,HIGH --exit-code 0
+  trivy_image_scan:
+    docker:
+      - image: aquasec/trivy:latest
+    steps:
+      - run:
+          name: Image Scan
+          command: |
+            trivy image ${DOCKER_REGISTRY_USERNAME}/joke-jolt:${SHORT_SHA} \
+              --severity HIGH,CRITICAL \
+              --exit-code 0
+  conftest_scan:
+    docker:
+      - image: openpolicyagent/conftest:latest
+    steps:
+      - checkout
+      - run:
+          name: Policy Check
+          command: |
+            conftest test k8s/ --policy policy/
+  docker_push:
+    machine: true
+    steps:
+      - run:
+          name: Docker Login
+          command: echo ${DOCKER_REGISTRY_PASSWORD} | docker login -u ${DOCKER_REGISTRY_USERNAME} --password-stdin
+      - run:
+          name: Push Image
+          command: |
+            docker push ${DOCKER_REGISTRY_USERNAME}/joke-jolt:${SHORT_SHA}
 
 workflows:
   version: 2
@@ -67,9 +117,25 @@ workflows:
       - test:
           requires:
             - install-dependencies
-      - docker_build_and_push:
+      - docker_build:
           requires:
             - test
+      - syft_bom:
+          requires:
+            - docker_build
+      - trivy_fs_scan:
+          requires:
+            - docker_build
+      - trivy_image_scan:
+          requires:
+            - docker_build
+      - conftest_scan:
+          requires:
+            - trivy_image_scan
+      - docker_push:
+          requires:
+            - trivy_image_scan
+            - conftest_scan
           filters:
             branches:
               only:

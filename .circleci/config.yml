@@ -81,18 +81,18 @@ jobs:
           paths:
             - sbom.json
 
-  tfsec_scan:
+  terraform_scan:
     docker:
-      - image: cimg/base:latest
+      - image: cimg/base:current
     steps:
       - run:
-          name: TFsec scan
+          name: Install TerrScan
           command: \
             curl -sSfL https://raw.githubusercontent.com/aquasecurity/tfsec/master/install.sh | bash -s -- -d
       - run:
-          name: TFsec scan
-          command: |
-            tfsec ./terraform/  --exclude-checks GEN001,GCP001,GCP002
+          name: TerrScan
+          command: \
+            tfsec ./terraform/
 
   trivy_fs_scan:
     docker:
@@ -203,7 +203,7 @@ workflows:
       - syft_bom:
           requires: [docker_build]
 
-      - tfsec_scan:
+      - terraform_scan:
           requires: [docker_build]
 
       - trivy_fs_scan:

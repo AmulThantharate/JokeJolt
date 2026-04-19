@@ -83,16 +83,12 @@ jobs:
 
   terraform_scan:
     docker:
-      - image: cimg/base:current
+      - image: aquasec/tfsec-ci:latest
     steps:
-      - run:
-          name: Install TerrScan
-          command: \
-            curl -sSfL https://raw.githubusercontent.com/aquasecurity/tfsec/master/install.sh | bash -s --  -d
+      - checkout
       - run:
           name: TerrScan
-          command: \
-            tfsec ./terraform/
+          command: tfsec ./terraform/
 
   trivy_fs_scan:
     docker:

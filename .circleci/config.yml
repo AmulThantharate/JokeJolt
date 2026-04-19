@@ -2,6 +2,7 @@ version: 2.1
 
 orbs:
   node: circleci/node@5.1.0
+  docker: circleci/docker@2.9.0
 
 jobs:
   initialize:
@@ -36,6 +37,23 @@ jobs:
           name: Run tests
           command: npm test
 
+  docker_build_and_push:
+    machine: true
+    environment:
+      - DOCKER_REGISTRY_USERNAME: ${DOCKER_REGISTRY_USERNAME}
+      - DOCKER_REGISTRY_PASSWORD: ${DOCKER_REGISTRY_PASSWORD}
+    steps:
+      - checkout
+      - run:
+          name: Docker login
+          command: echo ${DOCKER_REGISTRY_PASSWORD} | docker login -u ${DOCKER_REGISTRY_USERNAME} --password-stdin
+      - run:
+          name: Docker build
+          command: docker build -t ${DOCKER_REGISTRY_USERNAME}/joke-jolt:v2 .
+      - run:
+          name: Docker push
+          command: docker push ${DOCKER_REGISTRY_USERNAME}/joke-jolt:v2
+
 workflows:
   version: 2
   ci_pipeline:
@@ -47,6 +65,9 @@ workflows:
       - test:
           requires:
             - install-dependencies
+      - docker_build_and_push:
+          requires:
+            - test
           filters:
             branches:
               only:

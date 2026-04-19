@@ -68,7 +68,7 @@ jobs:
       - checkout
       - run:
           name: Install Syft
-          command: curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
+          command: curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sudo sh -s -- -b /usr/local/bin
       - run:
           name: Generate SBOM
           command: |

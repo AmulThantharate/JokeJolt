@@ -32,10 +32,10 @@ workflows:
   version: 2
   ci_pipeline:
     jobs:
-      - insitialize
+      - initialize
       - install-dependencies:
           requires:
-            - insitialize
+            - initialize
           filters:
             branches:
               only:

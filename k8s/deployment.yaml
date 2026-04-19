@@ -19,12 +19,20 @@ spec:
       labels:
         app: jokeapp
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
       containers:
         - name: joke-container
           image: claw4321/jokeapp:v1
           imagePullPolicy: Always
           ports:
             - containerPort: 3000
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            readOnlyRootFilesystem: true
           resources:
             requests:
               memory: "64Mi"

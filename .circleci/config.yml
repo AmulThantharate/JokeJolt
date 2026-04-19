@@ -45,11 +45,16 @@ jobs:
           name: Docker login
           command: echo ${DOCKER_REGISTRY_PASSWORD} | docker login -u ${DOCKER_REGISTRY_USERNAME} --password-stdin
       - run:
+          name: Set Image Tag
+          command: |
+            SHORT_SHA=$(echo "${CIRCLE_SHA1}" | cut -c1-7)
+            echo "export IMAGE_TAG=${SHORT_SHA}" > .env
+      - run:
           name: Docker build
-          command: docker build -t ${DOCKER_REGISTRY_USERNAME}/joke-jolt:v2 .
+          command: docker build -t ${DOCKER_REGISTRY_USERNAME}/joke-jolt:${IMAGE_TAG} .
       - run:
           name: Docker push
-          command: docker push ${DOCKER_REGISTRY_USERNAME}/joke-jolt:v2
+          command: docker push ${DOCKER_REGISTRY_USERNAME}/joke-jolt:${IMAGE_TAG}
 
 workflows:
   version: 2

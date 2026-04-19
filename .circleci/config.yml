@@ -52,9 +52,18 @@ jobs:
       - run:
           name: Docker build
           command: docker build -t ${DOCKER_REGISTRY_USERNAME}/joke-jolt:${SHORT_SHA} .
+      - run:
+          name: Save Docker image
+          command: |
+            mkdir -p workspace
+            docker save -o workspace/joke-jolt.tar ${DOCKER_REGISTRY_USERNAME}/joke-jolt:${SHORT_SHA}
+      - persist_to_workspace:
+          root: workspace
+          paths:
+            - joke-jolt.tar
   syft_bom:
     docker:
-      - image: anchorse/syft:latest
+      - image: anchore/syft:latest
     steps:
       - checkout
       - run:
@@ -80,10 +89,12 @@ jobs:
     docker:
       - image: aquasec/trivy:latest
     steps:
+      - attach_workspace:
+          at: workspace
       - run:
           name: Image Scan
           command: |
-            trivy image ${DOCKER_REGISTRY_USERNAME}/joke-jolt:${SHORT_SHA} \
+            trivy image --input workspace/joke-jolt.tar \
               --severity HIGH,CRITICAL \
               --exit-code 0
   conftest_scan:
@@ -98,6 +109,16 @@ jobs:
   docker_push:
     machine: true
     steps:
+      - attach_workspace:
+          at: workspace
+      - run:
+          name: Load Docker image
+          command: docker load -i workspace/joke-jolt.tar
+      - run:
+          name: Set Image Tag
+          command: |
+            SHORT_SHA=$(echo "${CIRCLE_SHA1}" | cut -c1-7)
+            echo "export SHORT_SHA=${SHORT_SHA}" >> $BASH_ENV
       - run:
           name: Docker Login
           command: echo ${DOCKER_REGISTRY_PASSWORD} | docker login -u ${DOCKER_REGISTRY_USERNAME} --password-stdin

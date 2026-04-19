@@ -27,6 +27,17 @@ jobs:
           root: .
           paths:
             - node_modules
+  test:
+    docker:
+      - image: circleci/node:latest
+    steps:
+      - checkout
+      - node/install-packages:
+          app-dir: .
+          cache-version: "v1"
+      - run:
+          name: Test
+          command: npm test
 
 workflows:
   version: 2
@@ -36,6 +47,9 @@ workflows:
       - install-dependencies:
           requires:
             - initialize
+      - test:
+          requires:
+            - install-dependencies
           filters:
             branches:
               only:

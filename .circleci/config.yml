@@ -5,7 +5,7 @@ orbs:
 
 jobs:
   initialize:
-    executor: default
+    executor: node/default
     steps:
       - checkout
       - run:

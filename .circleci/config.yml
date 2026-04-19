@@ -51,10 +51,10 @@ jobs:
             echo "export IMAGE_TAG=${SHORT_SHA}" > .env
       - run:
           name: Docker build
-          command: docker build -t ${DOCKER_REGISTRY_USERNAME}/joke-jolt:${IMAGE_TAG} .
+          command: docker build -t ${DOCKER_REGISTRY_USERNAME}/joke-jolt:${SHORT_SHA} .
       - run:
           name: Docker push
-          command: docker push ${DOCKER_REGISTRY_USERNAME}/joke-jolt:${IMAGE_TAG}
+          command: docker push ${DOCKER_REGISTRY_USERNAME}/joke-jolt:${SHORT_SHA}
 
 workflows:
   version: 2

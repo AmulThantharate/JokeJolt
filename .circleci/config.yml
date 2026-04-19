@@ -63,9 +63,12 @@ jobs:
             - joke-jolt.tar
   syft_bom:
     docker:
-      - image: anchore/syft:latest
+      - image: cimg/base:current
     steps:
       - checkout
+      - run:
+          name: Install Syft
+          command: curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
       - run:
           name: Generate SBOM
           command: |

@@ -1,19 +1,42 @@
 version: 2.1
+
+orbs:
+  node: circleci/node@5.1.0
+
 jobs:
-  say-hello:
-    docker:
-      - image: cimg/base:current
+  insitialize:
+    executor: default
     steps:
       - checkout
       - run:
-          name: "Say hello"
-          command: "echo From First CircleCI Pipeline"
-workflows:
-  say-hello-workflow:
-    jobs:
-      - say-hello
+          name: Initialize
+          command: |
+            echo "🚀 Starting pipeline"
+            echo "Branch: $CIRCLE_BRANCH"
+            echo "Commit: $CIRCLE_SHA1"
 
-    filters:
-      branches:
-        only:
-          - main
+  install-dependencies:
+    docker:
+      - image: circleci/node:latest
+    steps:
+      - checkout
+      - node/install-packages:
+          app-dir: .
+          cache-version: "v1"
+      - persist_to_workspace:
+          root: .
+          paths:
+            - node_modules
+
+workflows:
+  version: 2
+  ci_pipeline:
+    jobs:
+      - insitialize
+      - install-dependencies:
+          requires:
+            - insitialize
+          filters:
+            branches:
+              only:
+                - main

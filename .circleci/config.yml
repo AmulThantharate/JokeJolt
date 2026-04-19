@@ -3,6 +3,7 @@ version: 2.1
 orbs:
   node: circleci/node@5.1.0
   docker: circleci/docker@3.0.1
+  tfsec: mycodeself/tfsec-orb@1.0.5
 
 jobs:
   initialize:
@@ -80,6 +81,14 @@ jobs:
           root: .
           paths:
             - sbom.json
+
+  tfsec_scan:
+    executor: tfsec/default
+    steps:
+      - checkout
+      - tfsec/scan:
+          directory: terraform/
+          exclude-checks: GEN001,GCP001,GCP002
 
   trivy_fs_scan:
     docker:
@@ -208,7 +217,7 @@ workflows:
       - docker_push:
           requires:
             - smoke_test
-            
+
           filters:
             branches:
               only:

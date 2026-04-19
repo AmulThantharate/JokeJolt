@@ -39,9 +39,6 @@ jobs:
 
   docker_build_and_push:
     machine: true
-    environment:
-      - DOCKER_REGISTRY_USERNAME: ${DOCKER_REGISTRY_USERNAME}
-      - DOCKER_REGISTRY_PASSWORD: ${DOCKER_REGISTRY_PASSWORD}
     steps:
       - checkout
       - run:

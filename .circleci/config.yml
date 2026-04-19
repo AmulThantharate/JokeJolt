@@ -48,7 +48,7 @@ jobs:
           name: Set Image Tag
           command: |
             SHORT_SHA=$(echo "${CIRCLE_SHA1}" | cut -c1-7)
-            echo "export IMAGE_TAG=${SHORT_SHA}" > .env
+            echo "export SHORT_SHA=${SHORT_SHA}" >> $BASH_ENV
       - run:
           name: Docker build
           command: docker build -t ${DOCKER_REGISTRY_USERNAME}/joke-jolt:${SHORT_SHA} .

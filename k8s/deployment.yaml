@@ -1,0 +1,49 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: jokejolt
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: joke-deployment
+  namespace: jokejolt
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: jokeapp
+  template:
+    metadata:
+      labels:
+        app: jokeapp
+    spec:
+      containers:
+        - name: joke-container
+          image: claw4321/jokeapp:v1
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3000
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "256m"
+            limits:
+              memory: "128Mi"
+              cpu: "512m"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: joke-service
+  namespace: jokejolt
+spec:
+  selector:
+    app: jokeapp
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 3000
+  type: LoadBalancer

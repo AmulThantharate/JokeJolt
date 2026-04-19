@@ -12,3 +12,4 @@ coverage
 trivy-report.json
 scout-report.sarif
 dependency-check-report.*
+terraform/

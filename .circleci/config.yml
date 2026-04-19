@@ -3,7 +3,6 @@ version: 2.1
 orbs:
   node: circleci/node@5.1.0
   docker: circleci/docker@3.0.1
-  tfsec: mycodeself/tfsec@1.1.0
 
 jobs:
   initialize:
@@ -83,12 +82,17 @@ jobs:
             - sbom.json
 
   tfsec_scan:
-    executor: tfsec/default
+    docker:
+      - image: cimg/base:latest
     steps:
-      - checkout
-      - tfsec/scan:
-          directory: terraform/
-          exclude-checks: GEN001,GCP001,GCP002
+      - run:
+          name: TFsec scan
+          command: \
+            curl -sSfL https://raw.githubusercontent.com/aquasecurity/tfsec/master/install.sh | bash -s -- -d
+      - run:
+          name: TFsec scan
+          command: |
+            tfsec ./terraform/  --exclude-checks GEN001,GCP001,GCP002
 
   trivy_fs_scan:
     docker:
@@ -197,6 +201,9 @@ workflows:
           requires: [test]
 
       - syft_bom:
+          requires: [docker_build]
+
+      - tfsec_scan:
           requires: [docker_build]
 
       - trivy_fs_scan:

@@ -61,6 +61,7 @@ jobs:
           root: workspace
           paths:
             - joke-jolt.tar
+
   syft_bom:
     docker:
       - image: cimg/base:current
@@ -79,6 +80,7 @@ jobs:
           root: .
           paths:
             - sbom.json
+
   trivy_fs_scan:
     docker:
       - image: aquasec/trivy:latest
@@ -88,6 +90,7 @@ jobs:
           name: Trivy FS Scan
           command: |
             trivy fs . --severity CRITICAL,HIGH --exit-code 0
+
   trivy_image_scan:
     docker:
       - image: aquasec/trivy:latest
@@ -100,6 +103,7 @@ jobs:
             trivy image --input workspace/joke-jolt.tar \
               --severity HIGH,CRITICAL \
               --exit-code 0
+
   conftest_scan:
     docker:
       - image: openpolicyagent/conftest:latest
@@ -109,6 +113,43 @@ jobs:
           name: Policy Check
           command: |
             conftest test k8s/ --policy policy/
+
+  smoke_test:
+    machine: true
+    steps:
+      - attach_workspace:
+          at: workspace
+
+      - run:
+          name: Load Docker Image
+          command: |
+            docker load -i workspace/joke-jolt.tar
+
+      - run:
+          name: Set Image Tag
+          command: |
+            SHORT_SHA=$(echo "${CIRCLE_SHA1}" | cut -c1-7)
+            echo "export SHORT_SHA=${SHORT_SHA}" >> $BASH_ENV
+
+      - run:
+          name: Run Container
+          command: |
+            docker run -d -p 3000:3000 \
+              ${DOCKER_REGISTRY_USERNAME}/joke-jolt:${SHORT_SHA}
+
+      - run:
+          name: Wait for App
+          command: sleep 10
+
+      - run:
+          name: Install Dependencies
+          command: npm ci
+
+      - run:
+          name: Run Smoke Test
+          command: |
+            BASE_URL=http://localhost:3000 npm run smoke
+
   docker_push:
     machine: true
     steps:
@@ -135,31 +176,38 @@ workflows:
   ci_pipeline:
     jobs:
       - initialize
+
       - install-dependencies:
-          requires:
-            - initialize
+          requires: [initialize]
+
       - test:
-          requires:
-            - install-dependencies
+          requires: [install-dependencies]
+
       - docker_build:
-          requires:
-            - test
+          requires: [test]
+
       - syft_bom:
-          requires:
-            - docker_build
+          requires: [docker_build]
+
       - trivy_fs_scan:
-          requires:
-            - docker_build
+          requires: [docker_build]
+
       - trivy_image_scan:
-          requires:
-            - docker_build
+          requires: [docker_build]
+
       - conftest_scan:
           requires:
+            - trivy_fs_scan
             - trivy_image_scan
+
+      - smoke_test:
+          requires:
+            - conftest_scan
+
       - docker_push:
           requires:
-            - trivy_image_scan
-            - conftest_scan
+            - smoke_test
+            
           filters:
             branches:
               only:

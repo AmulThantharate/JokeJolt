@@ -117,6 +117,7 @@ jobs:
   smoke_test:
     machine: true
     steps:
+      - checkout
       - attach_workspace:
           at: workspace
 

@@ -17,25 +17,23 @@ jobs:
 
   install-dependencies:
     docker:
-      - image: circleci/node:latest
+      - image: cimg/node:20.10
     steps:
       - checkout
-      - node/install-packages:
-          app-dir: .
-          cache-version: "v1"
-      - persist_to_workspace:
-          root: .
-          paths:
-            - node_modules
+      - run:
+          name: Install dependencies
+          command: npm ci
+
   test:
     docker:
-      - image: circleci/node:latest
+      - image: cimg/node:20.10
     steps:
       - checkout
-      - attach_workspace:
-          at: .
       - run:
-          name: Test
+          name: Install dependencies
+          command: npm ci
+      - run:
+          name: Run tests
           command: npm test
 
 workflows:

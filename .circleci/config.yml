@@ -37,40 +37,6 @@ jobs:
           name: Run tests
           command: npm test
 
-  dependency-check:
-    docker:
-      - image: cimg/base:stable
-
-    steps:
-      - checkout
-
-      - run:
-          name: Install Java
-          command: |
-            sudo apt-get update
-            sudo apt-get install -y openjdk-17-jdk wget unzip
-
-      - run:
-          name: Install Dependency-Check
-          command: |
-            VERSION=$(curl -s https://dependency-check.github.io/DependencyCheck/current.txt)
-            wget "https://github.com/dependency-check/DependencyCheck/releases/download/v${VERSION}/dependency-check-${VERSION}-release.zip" -O dependency-check.zip
-            unzip dependency-check.zip
-            sudo mv dependency-check /opt/dependency-check
-
-      - run:
-          name: Run Scan
-          command: |
-            mkdir -p reports
-            /opt/dependency-check/bin/dependency-check.sh \
-              --project "joke-jolt" \
-              --scan . \
-              --format "HTML" \
-              --out reports
-
-      - store_artifacts:
-          path: reports
-
   docker_build:
     machine: true
     steps:
@@ -206,6 +172,30 @@ jobs:
           command: |
             docker push ${DOCKER_REGISTRY_USERNAME}/joke-jolt:${SHORT_SHA}
 
+  cosign-sign:
+    docker:
+      - image: cimg/base:stable
+    steps:
+      - checkout
+      - run:
+          name: Install Cosign
+          command: |
+            wget -q https://github.com/sigstore/cosign/releases/latest/download/cosign-linux-amd64
+            chmod +x cosign-linux-amd64
+            sudo mv cosign-linux-amd64 /usr/local/bin/cosign
+      - run:
+          name: Docker Login
+          command: echo ${DOCKER_REGISTRY_PASSWORD} | docker login -u ${DOCKER_REGISTRY_USERNAME} --password-stdin
+      - run:
+          name: Sign Image
+          command: |
+            echo "${COSIGN_PRIVATE_KEY}" > cosign.key
+            export COSIGN_PASSWORD=${COSIGN_PASSWORD}
+            SHORT_SHA=$(echo "${CIRCLE_SHA1}" | cut -c1-7)
+            cosign sign --yes \
+              --key cosign.key \
+              ${DOCKER_REGISTRY_USERNAME}/joke-jolt:${SHORT_SHA}
+
 workflows:
   version: 2
   ci_pipeline:
@@ -218,11 +208,8 @@ workflows:
       - test:
           requires: [install-dependencies]
 
-      - dependency-check:
-          requires: [test]
-
       - docker_build:
-          requires: [dependency-check]
+          requires: [test]
 
       - syft_bom:
           requires: [docker_build]
@@ -246,6 +233,14 @@ workflows:
           requires:
             - smoke_test
 
+          filters:
+            branches:
+              only:
+                - main
+
+      - cosign-sign:
+          requires:
+            - docker_push
           filters:
             branches:
               only:

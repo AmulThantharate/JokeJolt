@@ -53,7 +53,8 @@ jobs:
       - run:
           name: Install Dependency-Check
           command: |
-            wget https://github.com/jeremylong/DependencyCheck/releases/latest/download/dependency-check.zip
+            VERSION=$(curl -s https://dependency-check.github.io/DependencyCheck/current.txt)
+            wget "https://github.com/dependency-check/DependencyCheck/releases/download/v${VERSION}/dependency-check-${VERSION}-release.zip" -O dependency-check.zip
             unzip dependency-check.zip
             sudo mv dependency-check /opt/dependency-check
 

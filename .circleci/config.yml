@@ -202,8 +202,8 @@ jobs:
             # Read the digest from the workspace
             IMAGE_DIGEST=$(cat workspace/image-digest.txt)
             
-            # Write key carefully (using printf to preserve newlines)
-            printf "%b" "${COSIGN_PRIVATE_KEY}" > cosign.key
+            # Decode the Base64 key (The most robust method for CI)
+            echo "${COSIGN_PRIVATE_KEY}" | base64 -d > cosign.key
             export COSIGN_PASSWORD=${COSIGN_PASSWORD}
             
             cosign sign --yes --key cosign.key ${IMAGE_DIGEST}

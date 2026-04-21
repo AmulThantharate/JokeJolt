@@ -37,6 +37,39 @@ jobs:
           name: Run tests
           command: npm test
 
+  dependency-check:
+    docker:
+      - image: cimg/base:stable
+
+    steps:
+      - checkout
+
+      - run:
+          name: Install Java
+          command: |
+            sudo apt-get update
+            sudo apt-get install -y openjdk-17-jdk wget unzip
+
+      - run:
+          name: Install Dependency-Check
+          command: |
+            wget https://github.com/jeremylong/DependencyCheck/releases/latest/download/dependency-check.zip
+            unzip dependency-check.zip
+            sudo mv dependency-check /opt/dependency-check
+
+      - run:
+          name: Run Scan
+          command: |
+            mkdir -p reports
+            /opt/dependency-check/bin/dependency-check.sh \
+              --project "joke-jolt" \
+              --scan . \
+              --format "HTML" \
+              --out reports
+
+      - store_artifacts:
+          path: reports
+
   docker_build:
     machine: true
     steps:
@@ -80,15 +113,6 @@ jobs:
           root: .
           paths:
             - sbom.json
-
-  terraform_scan:
-    docker:
-      - image: aquasec/tfsec-ci:latest
-    steps:
-      - checkout
-      - run:
-          name: TerrScan
-          command: tfsec ./terraform/
 
   trivy_fs_scan:
     docker:
@@ -193,13 +217,13 @@ workflows:
       - test:
           requires: [install-dependencies]
 
-      - docker_build:
+      - dependency-check:
           requires: [test]
 
-      - syft_bom:
-          requires: [docker_build]
+      - docker_build:
+          requires: [dependency-check]
 
-      - terraform_scan:
+      - syft_bom:
           requires: [docker_build]
 
       - trivy_fs_scan:

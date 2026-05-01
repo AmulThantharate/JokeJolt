@@ -201,11 +201,11 @@ jobs:
           command: |
             # Read the digest from the workspace
             IMAGE_DIGEST=$(cat workspace/image-digest.txt)
-            
+
             # Decode the Base64 key (The most robust method for CI)
             echo "${COSIGN_PRIVATE_KEY}" | base64 -d > cosign.key
             export COSIGN_PASSWORD=${COSIGN_PASSWORD}
-            
+
             cosign sign --yes --key cosign.key ${IMAGE_DIGEST}
 
 workflows:

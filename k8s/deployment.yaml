@@ -25,7 +25,7 @@ spec:
         runAsGroup: 1000
       containers:
         - name: joke-container
-          image: claw4321/joke-jolt:v4
+          image: claw4321/joke-jolt:v5
           imagePullPolicy: Always
           ports:
             - containerPort: 3000
